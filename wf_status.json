@@ -1,0 +1,163 @@
+﻿[
+    {
+        "updatedAt":  "2026-03-04T14:20:19.405Z",
+        "createdAt":  "2026-03-04T14:20:19.405Z",
+        "id":  "16WaWTyDNPUDE5wu",
+        "name":  "ProjectOS - Tache Completee �?\u0027 Activity Log",
+        "active":  true,
+        "isArchived":  false,
+        "nodes":  [
+                      "@{id=wh-task-001; name=Webhook - Tache Completee; type=n8n-nodes-base.webhook; typeVersion=2; position=System.Object[]; parameters=}",
+                      "@{id=set-task-001; name=Preparer les Donnees; type=n8n-nodes-base.set; typeVersion=3; position=System.Object[]; parameters=}",
+                      "@{id=http-log-001; name=Logger dans Supabase; type=n8n-nodes-base.httpRequest; typeVersion=4; position=System.Object[]; parameters=}",
+                      "@{id=respond-001; name=Repondre OK; type=n8n-nodes-base.respondToWebhook; typeVersion=1; position=System.Object[]; parameters=}"
+                  ],
+        "connections":  {
+                            "Webhook - Tache Completee":  "@{main=System.Object[]}",
+                            "Preparer les Donnees":  "@{main=System.Object[]}"
+                        },
+        "settings":  {
+                         "executionOrder":  "v1",
+                         "saveDataErrorExecution":  "all",
+                         "saveManualExecutions":  true,
+                         "callerPolicy":  "workflowsFromSameOwner",
+                         "availableInMCP":  false
+                     },
+        "staticData":  null,
+        "meta":  null,
+        "pinData":  null,
+        "versionId":  "c012183e-f65f-4c3b-8386-a554b3acd871",
+        "activeVersionId":  "c012183e-f65f-4c3b-8386-a554b3acd871",
+        "triggerCount":  1,
+        "shared":  [
+                       "@{updatedAt=2026-03-04T14:20:19.405Z; createdAt=2026-03-04T14:20:19.405Z; role=workflow:owner; workflowId=16WaWTyDNPUDE5wu; projectId=y52nHRL3VEDJpigW}"
+                   ],
+        "activeVersion":  {
+                              "updatedAt":  "2026-03-04T14:20:19.435Z",
+                              "createdAt":  "2026-03-04T14:20:19.435Z",
+                              "versionId":  "c012183e-f65f-4c3b-8386-a554b3acd871",
+                              "workflowId":  "16WaWTyDNPUDE5wu",
+                              "nodes":  "   ",
+                              "connections":  "@{Webhook - Tache Completee=; Preparer les Donnees=}",
+                              "authors":  "Billel billel.y6@hotmail.fr",
+                              "name":  null,
+                              "description":  null,
+                              "autosaved":  false
+                          },
+        "tags":  [
+
+                 ]
+    },
+    {
+        "updatedAt":  "2026-03-04T14:20:31.792Z",
+        "createdAt":  "2026-03-04T14:20:31.792Z",
+        "id":  "Yrfh75c6spkVKBhc",
+        "name":  "ProjectOS - Resume Quotidien (Daily Summary)",
+        "active":  true,
+        "isArchived":  false,
+        "nodes":  [
+                      "@{id=sched-001; name=Planifie - Chaque Jour 8h; type=n8n-nodes-base.scheduleTrigger; typeVersion=1; position=System.Object[]; parameters=}",
+                      "@{id=http-tasks-001; name=Recuperer Taches du Jour; type=n8n-nodes-base.httpRequest; typeVersion=4; position=System.Object[]; parameters=}",
+                      "@{id=http-proj-001; name=Recuperer Projets Actifs; type=n8n-nodes-base.httpRequest; typeVersion=4; position=System.Object[]; parameters=}",
+                      "@{id=code-stag-001; name=Calculer Stagnation; type=n8n-nodes-base.code; typeVersion=2; position=System.Object[]; parameters=}",
+                      "@{id=code-summary-001; name=Generer Resume; type=n8n-nodes-base.code; typeVersion=2; position=System.Object[]; parameters=}"
+                  ],
+        "connections":  {
+                            "Planifie - Chaque Jour 8h":  "@{main=System.Object[]}",
+                            "Recuperer Projets Actifs":  "@{main=System.Object[]}",
+                            "Calculer Stagnation":  "@{main=System.Object[]}",
+                            "Recuperer Taches du Jour":  "@{main=System.Object[]}"
+                        },
+        "settings":  {
+                         "executionOrder":  "v1",
+                         "saveDataErrorExecution":  "all",
+                         "saveManualExecutions":  true,
+                         "callerPolicy":  "workflowsFromSameOwner",
+                         "availableInMCP":  false
+                     },
+        "staticData":  {
+                           "node:Planifie - Chaque Jour 8h":  "@{recurrenceRules=System.Object[]}"
+                       },
+        "meta":  null,
+        "pinData":  null,
+        "versionId":  "43ce351f-c604-4112-924b-b68b5a4f3f2a",
+        "activeVersionId":  "43ce351f-c604-4112-924b-b68b5a4f3f2a",
+        "triggerCount":  1,
+        "shared":  [
+                       "@{updatedAt=2026-03-04T14:20:31.792Z; createdAt=2026-03-04T14:20:31.792Z; role=workflow:owner; workflowId=Yrfh75c6spkVKBhc; projectId=y52nHRL3VEDJpigW}"
+                   ],
+        "activeVersion":  {
+                              "updatedAt":  "2026-03-04T14:20:31.801Z",
+                              "createdAt":  "2026-03-04T14:20:31.801Z",
+                              "versionId":  "43ce351f-c604-4112-924b-b68b5a4f3f2a",
+                              "workflowId":  "Yrfh75c6spkVKBhc",
+                              "nodes":  "    ",
+                              "connections":  "@{Planifie - Chaque Jour 8h=; Recuperer Projets Actifs=; Calculer Stagnation=; Recuperer Taches du Jour=}",
+                              "authors":  "Billel billel.y6@hotmail.fr",
+                              "name":  null,
+                              "description":  null,
+                              "autosaved":  false
+                          },
+        "tags":  [
+
+                 ]
+    },
+    {
+        "updatedAt":  "2026-03-04T14:20:42.579Z",
+        "createdAt":  "2026-03-04T14:20:42.579Z",
+        "id":  "Es32NsKVmu4rSwDJ",
+        "name":  "ProjectOS - Capture Idee �?\u0027 Projet IA (OpenAI)",
+        "active":  true,
+        "isArchived":  false,
+        "nodes":  [
+                      "@{id=wh-idea-001; name=Webhook - Nouvelle Idee; type=n8n-nodes-base.webhook; typeVersion=2; position=System.Object[]; parameters=}",
+                      "@{id=code-validate-001; name=Valider Idee; type=n8n-nodes-base.code; typeVersion=2; position=System.Object[]; parameters=}",
+                      "@{id=http-openai-001; name=OpenAI - Structurer le Projet; type=n8n-nodes-base.httpRequest; typeVersion=4; position=System.Object[]; parameters=}",
+                      "@{id=code-parse-001; name=Parser Reponse IA; type=n8n-nodes-base.code; typeVersion=2; position=System.Object[]; parameters=}",
+                      "@{id=http-create-proj-001; name=Creer Projet Supabase; type=n8n-nodes-base.httpRequest; typeVersion=4; position=System.Object[]; parameters=}",
+                      "@{id=code-prep-tasks-001; name=Preparer Taches; type=n8n-nodes-base.code; typeVersion=2; position=System.Object[]; parameters=}",
+                      "@{id=http-insert-tasks-001; name=Inserer Taches Supabase; type=n8n-nodes-base.httpRequest; typeVersion=4; position=System.Object[]; parameters=}",
+                      "@{id=code-final-001; name=Reponse Finale; type=n8n-nodes-base.code; typeVersion=2; position=System.Object[]; parameters=}"
+                  ],
+        "connections":  {
+                            "Webhook - Nouvelle Idee":  "@{main=System.Object[]}",
+                            "Valider Idee":  "@{main=System.Object[]}",
+                            "OpenAI - Structurer le Projet":  "@{main=System.Object[]}",
+                            "Parser Reponse IA":  "@{main=System.Object[]}",
+                            "Creer Projet Supabase":  "@{main=System.Object[]}",
+                            "Preparer Taches":  "@{main=System.Object[]}",
+                            "Inserer Taches Supabase":  "@{main=System.Object[]}"
+                        },
+        "settings":  {
+                         "executionOrder":  "v1",
+                         "saveDataErrorExecution":  "all",
+                         "saveManualExecutions":  true,
+                         "callerPolicy":  "workflowsFromSameOwner",
+                         "availableInMCP":  false
+                     },
+        "staticData":  null,
+        "meta":  null,
+        "pinData":  null,
+        "versionId":  "9a971fa6-8fee-496e-bb6d-398e71b260ab",
+        "activeVersionId":  "9a971fa6-8fee-496e-bb6d-398e71b260ab",
+        "triggerCount":  1,
+        "shared":  [
+                       "@{updatedAt=2026-03-04T14:20:42.579Z; createdAt=2026-03-04T14:20:42.579Z; role=workflow:owner; workflowId=Es32NsKVmu4rSwDJ; projectId=y52nHRL3VEDJpigW}"
+                   ],
+        "activeVersion":  {
+                              "updatedAt":  "2026-03-04T14:20:42.589Z",
+                              "createdAt":  "2026-03-04T14:20:42.589Z",
+                              "versionId":  "9a971fa6-8fee-496e-bb6d-398e71b260ab",
+                              "workflowId":  "Es32NsKVmu4rSwDJ",
+                              "nodes":  "       ",
+                              "connections":  "@{Webhook - Nouvelle Idee=; Valider Idee=; OpenAI - Structurer le Projet=; Parser Reponse IA=; Creer Projet Supabase=; Preparer Taches=; Inserer Taches Supabase=}",
+                              "authors":  "Billel billel.y6@hotmail.fr",
+                              "name":  null,
+                              "description":  null,
+                              "autosaved":  false
+                          },
+        "tags":  [
+
+                 ]
+    }
+]

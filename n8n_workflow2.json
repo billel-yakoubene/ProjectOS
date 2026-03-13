@@ -1,0 +1,193 @@
+{
+    "name": "ProjectOS - Resume Quotidien (Daily Summary)",
+    "nodes": [
+        {
+            "id": "sched-001",
+            "name": "Planifie - Chaque Jour 8h",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1,
+            "position": [
+                200,
+                300
+            ],
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "0 8 * * 1-5"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "http-tasks-001",
+            "name": "Recuperer Taches du Jour",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                480,
+                180
+            ],
+            "parameters": {
+                "method": "GET",
+                "url": "https://llcfsyjzxhmaalymkwwu.supabase.co/rest/v1/tasks",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
+                        }
+                    ]
+                },
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "status",
+                            "value": "eq.done"
+                        },
+                        {
+                            "name": "select",
+                            "value": "id,content,project_id,updated_at,status"
+                        },
+                        {
+                            "name": "order",
+                            "value": "updated_at.desc"
+                        }
+                    ]
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "http-proj-001",
+            "name": "Recuperer Projets Actifs",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                480,
+                420
+            ],
+            "parameters": {
+                "method": "GET",
+                "url": "https://llcfsyjzxhmaalymkwwu.supabase.co/rest/v1/projects",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
+                        }
+                    ]
+                },
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "status",
+                            "value": "eq.active"
+                        },
+                        {
+                            "name": "select",
+                            "value": "id,title,description,status,updated_at,created_at"
+                        }
+                    ]
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "code-stag-001",
+            "name": "Calculer Stagnation",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                760,
+                420
+            ],
+            "parameters": {
+                "jsCode": "const items = $input.all();\nconst results = items.map(item => {\n  const proj = item.json;\n  const lastActivity = new Date(proj.updated_at || proj.created_at || new Date());\n  const now = new Date();\n  const diffMs = now - lastActivity;\n  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));\n  const diffDays = Math.floor(diffHours / 24);\n  return {\n    project_id: proj.id,\n    project_title: proj.title,\n    stagnation_hours: diffHours,\n    stagnation_days: diffDays,\n    is_stagnant: diffHours > 48,\n    readable_stagnation: diffDays > 0 ? `${diffDays} jour(s)` : `${diffHours}h`\n  };\n});\nconst stagnant = results.filter(p => p.is_stagnant);\nreturn { total_projects: results.length, stagnant_count: stagnant.length, stagnant_projects: stagnant, all_projects: results };"
+            }
+        },
+        {
+            "id": "code-summary-001",
+            "name": "Generer Resume",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1040,
+                300
+            ],
+            "parameters": {
+                "jsCode": "const stagnation = $('Calculer Stagnation').item.json;\nconst tasksAll = $('Recuperer Taches du Jour').all();\nconst today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\nconst completedToday = tasksAll.length;\nlet report = `## Resume ProjectOS - ${today}\\n\\n`;\nreport += `### Taches completees: ${completedToday}\\n`;\ntasksAll.slice(0, 10).forEach(t => { report += `- ${t.json.content}\\n`; });\nreport += `\\n### Projets actifs: ${stagnation.total_projects}\\n`;\nif (stagnation.stagnant_count > 0) {\n  report += `\\n### Projets en stagnation (${stagnation.stagnant_count}):\\n`;\n  stagnation.stagnant_projects.forEach(p => { report += `- **${p.project_title}** - ${p.readable_stagnation} sans activite\\n`; });\n}\nreport += `\\n---\\nGenere par ProjectOS n8n - ${new Date().toLocaleTimeString('fr-FR')}`;\nreturn { report, completed_today: completedToday, stagnant_projects: stagnation.stagnant_count, generated_at: new Date().toISOString() };"
+            }
+        }
+    ],
+    "connections": {
+        "Planifie - Chaque Jour 8h": {
+            "main": [
+                [
+                    {
+                        "node": "Recuperer Taches du Jour",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Recuperer Projets Actifs",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Recuperer Projets Actifs": {
+            "main": [
+                [
+                    {
+                        "node": "Calculer Stagnation",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Calculer Stagnation": {
+            "main": [
+                [
+                    {
+                        "node": "Generer Resume",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Recuperer Taches du Jour": {
+            "main": [
+                [
+                    {
+                        "node": "Generer Resume",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "saveDataErrorExecution": "all",
+        "saveManualExecutions": true
+    }
+}

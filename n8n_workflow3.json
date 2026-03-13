@@ -1,0 +1,271 @@
+{
+    "name": "ProjectOS - Capture Idee → Projet IA (OpenAI)",
+    "nodes": [
+        {
+            "id": "wh-idea-001",
+            "name": "Webhook - Nouvelle Idee",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                200,
+                300
+            ],
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "generate-project",
+                "responseMode": "lastNode",
+                "options": {}
+            }
+        },
+        {
+            "id": "code-validate-001",
+            "name": "Valider Idee",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                460,
+                300
+            ],
+            "parameters": {
+                "jsCode": "const body = $input.item.json.body || $input.item.json;\nconst idea = body.idea || body.description || body.text;\nif (!idea || idea.trim().length < 5) {\n  throw new Error('Idee trop courte ou manquante (min 5 caracteres)');\n}\nreturn { idea: idea.trim(), user_id: body.user_id || body.userId || null, received_at: new Date().toISOString() };"
+            }
+        },
+        {
+            "id": "http-openai-001",
+            "name": "OpenAI - Structurer le Projet",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                720,
+                300
+            ],
+            "parameters": {
+                "method": "POST",
+                "url": "https://api.openai.com/v1/chat/completions",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer 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"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "contentType": "json",
+                "body": "={{ JSON.stringify({ model: 'gpt-4o-mini', response_format: { type: 'json_object' }, messages: [{ role: 'system', content: 'Tu es un coach en productivite expert. Transforme les idees brutes en projets structures. Reponds UNIQUEMENT en JSON avec ce format: {\"title\": \"Titre court\", \"description\": \"2 phrases max\", \"tasks\": [{\"content\": \"[Verbe action] ...\", \"description\": \"Explications approfondies, astuces de deblocage, exemples concrets et 2-3 LIENS UTILES (URL format https://...).\", \"order\": 1}]}. Genere 4 a 6 taches. La premiere doit etre faisable en moins de 10 minutes.' }, { role: 'user', content: 'Idee: ' + $json.idea }], max_tokens: 1500, temperature: 0.7 }) }}",
+                "options": {}
+            }
+        },
+        {
+            "id": "code-parse-001",
+            "name": "Parser Reponse IA",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                980,
+                300
+            ],
+            "parameters": {
+                "jsCode": "const aiResp = $input.item.json;\nconst content = aiResp.choices[0].message.content;\nlet projectData;\ntry { projectData = JSON.parse(content); } catch(e) { throw new Error('Echec parsing IA: ' + content); }\nif (!projectData.title || !projectData.tasks || !Array.isArray(projectData.tasks)) {\n  throw new Error('Structure IA invalide');\n}\nconst ideaData = $('Valider Idee').item.json;\nreturn { title: projectData.title, description: projectData.description || '', tasks: projectData.tasks, user_id: ideaData.user_id, original_idea: ideaData.idea, task_count: projectData.tasks.length };"
+            }
+        },
+        {
+            "id": "http-create-proj-001",
+            "name": "Creer Projet Supabase",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                1240,
+                180
+            ],
+            "parameters": {
+                "method": "POST",
+                "url": "https://llcfsyjzxhmaalymkwwu.supabase.co/rest/v1/projects",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        },
+                        {
+                            "name": "Prefer",
+                            "value": "return=representation"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "contentType": "json",
+                "body": "={{ JSON.stringify({ title: $json.title, description: $json.description, user_id: $json.user_id, status: 'active', metadata: { is_ai_generated: true, original_idea: $json.original_idea } }) }}",
+                "options": {}
+            }
+        },
+        {
+            "id": "code-prep-tasks-001",
+            "name": "Preparer Taches",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1240,
+                440
+            ],
+            "parameters": {
+                "jsCode": "const projectResp = $('Creer Projet Supabase').item.json;\nconst parserData = $('Parser Reponse IA').item.json;\nconst project = Array.isArray(projectResp) ? projectResp[0] : projectResp;\nconst projectId = project.id;\nif (!projectId) throw new Error('Echec creation projet - pas d ID');\nconst taskItems = parserData.tasks.map(task => ({ project_id: projectId, content: task.content, description: task.description || null, 'order': task.order, status: 'todo', is_ai_generated: true }));\nreturn { tasks: taskItems, project_id: projectId, project_title: project.title, task_count: taskItems.length };"
+            }
+        },
+        {
+            "id": "http-insert-tasks-001",
+            "name": "Inserer Taches Supabase",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                1500,
+                440
+            ],
+            "parameters": {
+                "method": "POST",
+                "url": "https://llcfsyjzxhmaalymkwwu.supabase.co/rest/v1/tasks",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        },
+                        {
+                            "name": "Prefer",
+                            "value": "return=representation"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "contentType": "json",
+                "body": "={{ JSON.stringify($json.tasks) }}",
+                "options": {}
+            }
+        },
+        {
+            "id": "code-final-001",
+            "name": "Reponse Finale",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1760,
+                300
+            ],
+            "parameters": {
+                "jsCode": "const projData = $('Preparer Taches').item.json;\nreturn { success: true, project_id: projData.project_id, project_title: projData.project_title, tasks_created: projData.task_count, message: `Projet \"${projData.project_title}\" cree avec ${projData.task_count} taches!` };"
+            }
+        }
+    ],
+    "connections": {
+        "Webhook - Nouvelle Idee": {
+            "main": [
+                [
+                    {
+                        "node": "Valider Idee",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Valider Idee": {
+            "main": [
+                [
+                    {
+                        "node": "OpenAI - Structurer le Projet",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI - Structurer le Projet": {
+            "main": [
+                [
+                    {
+                        "node": "Parser Reponse IA",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parser Reponse IA": {
+            "main": [
+                [
+                    {
+                        "node": "Creer Projet Supabase",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Preparer Taches",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Creer Projet Supabase": {
+            "main": [
+                [
+                    {
+                        "node": "Preparer Taches",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Preparer Taches": {
+            "main": [
+                [
+                    {
+                        "node": "Inserer Taches Supabase",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Inserer Taches Supabase": {
+            "main": [
+                [
+                    {
+                        "node": "Reponse Finale",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "saveDataErrorExecution": "all",
+        "saveManualExecutions": true
+    }
+}

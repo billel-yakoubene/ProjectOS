@@ -1,0 +1,149 @@
+{
+    "name": "ProjectOS - Tache Completee → Activity Log",
+    "nodes": [
+        {
+            "id": "wh-task-001",
+            "name": "Webhook - Tache Completee",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                200,
+                300
+            ],
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "task-completed",
+                "responseMode": "onReceived",
+                "options": {}
+            }
+        },
+        {
+            "id": "set-task-001",
+            "name": "Preparer les Donnees",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3,
+            "position": [
+                480,
+                300
+            ],
+            "parameters": {
+                "mode": "manual",
+                "fields": {
+                    "values": [
+                        {
+                            "name": "task_id",
+                            "value": "={{ $json.body.task_id }}"
+                        },
+                        {
+                            "name": "project_id",
+                            "value": "={{ $json.body.project_id }}"
+                        },
+                        {
+                            "name": "task_content",
+                            "value": "={{ $json.body.content }}"
+                        },
+                        {
+                            "name": "completed_at",
+                            "value": "={{ $json.body.completed_at || $now.toISO() }}"
+                        },
+                        {
+                            "name": "action_type",
+                            "value": "task_completed"
+                        }
+                    ]
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "http-log-001",
+            "name": "Logger dans Supabase",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                760,
+                200
+            ],
+            "parameters": {
+                "method": "POST",
+                "url": "https://llcfsyjzxhmaalymkwwu.supabase.co/rest/v1/activity_logs",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        },
+                        {
+                            "name": "Prefer",
+                            "value": "return=representation"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "contentType": "json",
+                "body": "={{ JSON.stringify({ task_id: $json.task_id, action_type: $json.action_type }) }}",
+                "options": {}
+            }
+        },
+        {
+            "id": "respond-001",
+            "name": "Repondre OK",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                760,
+                420
+            ],
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={ \"success\": true, \"message\": \"Task logged\", \"task_id\": \"{{ $json.task_id }}\" }",
+                "options": {
+                    "responseCode": 200
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Webhook - Tache Completee": {
+            "main": [
+                [
+                    {
+                        "node": "Preparer les Donnees",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Preparer les Donnees": {
+            "main": [
+                [
+                    {
+                        "node": "Logger dans Supabase",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Repondre OK",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "saveDataErrorExecution": "all",
+        "saveManualExecutions": true
+    }
+}

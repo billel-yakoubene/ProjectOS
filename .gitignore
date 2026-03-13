@@ -53,3 +53,8 @@ build/
 out/
 *.exe
 *.o
+
+.env
+dev_logs.txt
+node_modules/
+.cursor/

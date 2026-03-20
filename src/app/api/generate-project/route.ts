@@ -9,10 +9,8 @@ export async function POST(req: Request) {
         }
 
         // Forwarding to n8n webhook
-        // Hardcoding for Vercel production to bypass env issues
-        const N8N_WEBHOOK_URL = process.env.NODE_ENV === 'development' 
-            ? 'http://localhost:5678/webhook/generate-project'
-            : 'https://n8n-production-e94f.up.railway.app/webhook/generate-project';
+        // Hardcoding for both local development and Vercel to use the new Railway server!
+        const N8N_WEBHOOK_URL = 'https://n8n-production-e94f.up.railway.app/webhook/generate-project';
 
         console.log('Forwarding idea to n8n:', idea);
 

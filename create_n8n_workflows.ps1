@@ -2,8 +2,8 @@
 # ProjectOS - n8n Workflow Creation
 # ============================================================
 
-$N8N_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjNWFmYTg5NC1lZDBiLTQxMzQtYWYwMC1lODdiMTdkMWI3NmMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNjFhMzI2ZmYtZDYxNC00YzlhLWI0ZGItYjU5MGVhYzRjZTJlIiwiaWF0IjoxNzcyNjMyMjE0LCJleHAiOjE3NzUxODg4MDB9.Rq6eKWeDRGUxZzjGzsYfrZvK2WdaSDSN7EE-cpiBQNw"
-$N8N_URL = "http://localhost:5678"
+$N8N_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNTI1MDg5YS1iNjhhLTRiMTUtYmNmZS04N2Y2NjY1NTUwOGEiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNDNhMjg4MzYtYjAyMC00N2YzLTgxNGItNDU5M2QxZmU2ZWIzIiwiaWF0IjoxNzczOTk4MDE5LCJleHAiOjE3NzY1NzEyMDB9.xouHiAG6WpPOd1k4bBzNItUfGTrFtD1Lp8DUtW99QlE"
+$N8N_URL = "https://n8n-production-e94f.up.railway.app"
 $SUPABASE_URL = "https://llcfsyjzxhmaalymkwwu.supabase.co"
 $SUPABASE_KEY = "sb_publishable_eguo_16DBxvdcXUEFEDc8g_qKQH3BtB"
 
@@ -105,7 +105,7 @@ $workflow1 = @{
             position    = @(700, 400)
             parameters  = @{
                 respondWith  = "json"
-                responseBody = "={{ JSON.stringify({ success: true, task_id: $json.task_id, message: 'Task logged successfully' }) }}"
+                responseBody = '={{ JSON.stringify({ success: true, task_id: $json.task_id, message: ''Task logged successfully'' }) }}'
                 options      = @{ responseCode = 200 }
             }
         }
@@ -126,9 +126,10 @@ $workflow1 = @{
         saveDataErrorExecution = "all"
         saveManualExecutions   = $true
     }
-} | ConvertTo-Json -Depth 20 -Compress
+}
+$workflow1Json = $workflow1 | ConvertTo-Json -Depth 20 -Compress
 
-$id1 = Create-Workflow "Task Completed Log" $workflow1
+$id1 = Create-Workflow "Task Completed Log" $workflow1Json
 
 # ============================================================
 # WORKFLOW 2 : Daily Summary
@@ -213,7 +214,7 @@ $workflow2 = @{
             typeVersion = 2
             position    = @(700, 400)
             parameters  = @{
-                jsCode = "const items = $input.all(); const results = items.map(item => { const proj = item.json; const lastActivity = new Date(proj.updated_at || proj.created_at || new Date()); const now = new Date(); const diffMs = now - lastActivity; const diffHours = Math.floor(diffMs / (1000 * 60 * 60)); const diffDays = Math.floor(diffHours / 24); return { project_id: proj.id, project_title: proj.title, status: proj.status, stagnation_hours: diffHours, stagnation_days: diffDays, is_stagnant: diffHours > 48, readable_stagnation: diffDays > 0 ? `${diffDays} day(s)` : `${diffHours} hour(s)` }; }); const stagnantProjects = results.filter(p => p.is_stagnant); return { analyzed_at: new Date().toISOString(), total_projects: results.length, stagnant_count: stagnantProjects.length, stagnant_projects: stagnantProjects, all_projects: results };"
+                jsCode = 'const items = $input.all(); const results = items.map(item => { const proj = item.json; const lastActivity = new Date(proj.updated_at || proj.created_at || new Date()); const now = new Date(); const diffMs = now - lastActivity; const diffHours = Math.floor(diffMs / (1000 * 60 * 60)); const diffDays = Math.floor(diffHours / 24); return { project_id: proj.id, project_title: proj.title, status: proj.status, stagnation_hours: diffHours, stagnation_days: diffDays, is_stagnant: diffHours > 48, readable_stagnation: diffDays > 0 ? `${diffDays} day(s)` : `${diffHours} hour(s)` }; }); const stagnantProjects = results.filter(p => p.is_stagnant); return { analyzed_at: new Date().toISOString(), total_projects: results.length, stagnant_count: stagnantProjects.length, stagnant_projects: stagnantProjects, all_projects: results };'
             }
         },
         @{
@@ -223,7 +224,7 @@ $workflow2 = @{
             typeVersion = 2
             position    = @(950, 300)
             parameters  = @{
-                jsCode = "const stagnationData = $('Calculate Stagnation').item.json; const tasksData = $('Get Daily Tasks').all(); const today = new Date().toLocaleDateString('en-US'); const completedToday = tasksData.length; let summary = `## ProjectOS Summary - ${today}\n\n`; summary += `### Tasks Completed Today: ${completedToday}\n`; if (completedToday > 0) { tasksData.forEach(t => { summary += `- ${t.json.content}\n`; }); } summary += `\n### Active Projects: ${stagnationData.total_projects}\n`; if (stagnationData.stagnant_count > 0) { summary += `\n### Stagnant Projects (${stagnationData.stagnant_count}):\n`; stagnationData.stagnant_projects.forEach(p => { summary += `- **${p.project_title}** - Inactive for ${p.readable_stagnation}\n`; }); } return { summary_text: summary, completed_today: completedToday, stagnant_projects: stagnationData.stagnant_count };"
+                jsCode = 'const stagnationData = $(''Calculate Stagnation'').item.json; const tasksData = $(''Get Daily Tasks'').all(); const today = new Date().toLocaleDateString(''en-US''); const completedToday = tasksData.length; let summary = `## ProjectOS Summary - ${today}\n\n`; summary += `### Tasks Completed Today: ${completedToday}\n`; if (completedToday > 0) { tasksData.forEach(t => { summary += `- ${t.json.content}\n`; }); } summary += `\n### Active Projects: ${stagnationData.total_projects}\n`; if (stagnationData.stagnant_count > 0) { summary += `\n### Stagnant Projects (${stagnationData.stagnant_count}):\n`; stagnationData.stagnant_projects.forEach(p => { summary += `- **${p.project_title}** - Inactive for ${p.readable_stagnation}\n`; }); } return { summary_text: summary, completed_today: completedToday, stagnant_projects: stagnationData.stagnant_count };'
             }
         }
     )
@@ -249,9 +250,10 @@ $workflow2 = @{
         saveDataErrorExecution = "all"
         saveManualExecutions   = $true
     }
-} | ConvertTo-Json -Depth 20 -Compress
+}
+$workflow2Json = $workflow2 | ConvertTo-Json -Depth 20 -Compress
 
-$id2 = Create-Workflow "Daily Summary" $workflow2
+$id2 = Create-Workflow "Daily Summary" $workflow2Json
 
 # ============================================================
 # WORKFLOW 3 : Idea Capture -> AI AI Project
@@ -284,7 +286,7 @@ $workflow3 = @{
             typeVersion = 2
             position    = @(450, 300)
             parameters  = @{
-                jsCode = "const body = $input.item.json.body || $input.item.json; const idea = body.idea || body.description || body.text; if (!idea || idea.trim().length < 5) { throw new Error('Idea too short'); } return { idea: idea.trim(), user_id: body.user_id, received_at: new Date().toISOString() };"
+                jsCode = 'const body = $input.item.json.body || $input.item.json; const idea = body.idea || body.description || body.text; if (!idea || idea.trim().length < 5) { throw new Error(''Idea too short''); } return { idea: idea.trim(), user_id: body.user_id, received_at: new Date().toISOString() };'
             }
         },
         @{
@@ -305,7 +307,7 @@ $workflow3 = @{
                 }
                 sendBody         = $true
                 contentType      = "json"
-                body             = "{\"model\": \"gpt-4o-mini\", \"response_format\": { \"type\": \"json_object\" }, \"messages\": [{\"role\": \"system\", \"content\": \"You are a productivity expert. Transform ideas into projects. Format: { title, description, tasks:[ { content, order }] }\"}, {\"role\": \"user\", \"content\": \"Idea: { { $json.idea } }\"}]}"
+                body             = '{"model": "gpt-4o-mini", "response_format": { "type": "json_object" }, "messages": [{"role": "system", "content": "You are a productivity expert. Transform ideas into projects. Format: { title, description, tasks:[ { content, order }] }"}, {"role": "user", "content": "Idea: { { $json.idea } }"}]}'
             }
         },
         @{
@@ -315,7 +317,7 @@ $workflow3 = @{
             typeVersion = 2
             position    = @(950, 300)
             parameters  = @{
-                jsCode = "const aiResponse = $input.item.json; const content = JSON.parse(aiResponse.choices[0].message.content); const ideaData = $('Validate Idea').item.json; return { title: content.title, description: content.description, tasks: content.tasks, user_id: ideaData.user_id, original_idea: ideaData.idea };"
+                jsCode = 'const aiResponse = $input.item.json; const content = JSON.parse(aiResponse.choices[0].message.content); const ideaData = $(''Validate Idea'').item.json; return { title: content.title, description: content.description, tasks: content.tasks, user_id: ideaData.user_id, original_idea: ideaData.idea };'
             }
         },
         @{
@@ -337,7 +339,7 @@ $workflow3 = @{
                     )
                 }
                 sendBody         = $true
-                body             = "={{ JSON.stringify({ title: $json.title, description: $json.description, user_id: $json.user_id, status: 'active' }) }}"
+                body             = '={{ JSON.stringify({ title: $json.title, description: $json.description, user_id: $json.user_id, status: ''active'' }) }}'
             }
         },
         @{
@@ -347,7 +349,7 @@ $workflow3 = @{
             typeVersion = 2
             position    = @(1200, 400)
             parameters  = @{
-                jsCode = "const project = $('Create Project in Supabase').item.json[0]; const parserData = $('Parse AI Response').item.json; const taskItems = parserData.tasks.map(task => ({ project_id: project.id, content: task.content, order: task.order, status: 'todo' })); return { tasks: taskItems, project_id: project.id };"
+                jsCode = 'const project = $(''Create Project in Supabase'').item.json[0]; const parserData = $(''Parse AI Response'').item.json; const taskItems = parserData.tasks.map(task => ({ project_id: project.id, content: task.content, order: task.order, status: ''todo'' })); return { tasks: taskItems, project_id: project.id };'
             }
         },
         @{
@@ -368,7 +370,7 @@ $workflow3 = @{
                     )
                 }
                 sendBody         = $true
-                body             = "={{ JSON.stringify($json.tasks) }}"
+                body             = '={{ JSON.stringify($json.tasks) }}'
             }
         },
         @{
@@ -378,7 +380,7 @@ $workflow3 = @{
             typeVersion = 2
             position    = @(1700, 300)
             parameters  = @{
-                jsCode = "return { success: true, message: 'Project created' };"
+                jsCode = 'return { success: true, message: ''Project created'' };'
             }
         }
     )
@@ -408,9 +410,10 @@ $workflow3 = @{
             main = @(@(@{ node = "Final Response"; type = "main"; index = 0 }))
         }
     }
-} | ConvertTo-Json -Depth 20 -Compress
+}
+$workflow3Json = $workflow3 | ConvertTo-Json -Depth 20 -Compress
 
-$id3 = Create-Workflow "Idea Capture Project" $workflow3
+$id3 = Create-Workflow "Idea Capture Project" $workflow3Json
 
 Write-Host "`nCREATION SUMMARY" -ForegroundColor Magenta
 Write-Host "Workflow 1: $id1"

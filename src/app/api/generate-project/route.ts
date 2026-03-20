@@ -9,8 +9,10 @@ export async function POST(req: Request) {
         }
 
         // Forwarding to n8n webhook
-        // Note: Using 'webhook' path, not 'webhook-test' for production-like workflow
-        const N8N_WEBHOOK_URL = `${process.env.N8N_WEBHOOK_BASE_URL || 'http://localhost:5678'}/webhook/generate-project`;
+        // Hardcoding for Vercel production to bypass env issues
+        const N8N_WEBHOOK_URL = process.env.NODE_ENV === 'development' 
+            ? 'http://localhost:5678/webhook/generate-project'
+            : 'https://n8n-production-e94f.up.railway.app/webhook/generate-project';
 
         console.log('Forwarding idea to n8n:', idea);
 

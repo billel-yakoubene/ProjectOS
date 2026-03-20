@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+export const runtime = 'nodejs'; // Force Node.js runtime (not Edge)
 export const maxDuration = 60; // Vercel: allow up to 60 seconds for this API route
 
 export async function POST(req: Request) {
